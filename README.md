@@ -1,6 +1,6 @@
 # we-came-we-SAWS-we-conquered...Capstone Project
 ## Data Science Analysis of San Antonio Water System (SAWS) 
-Using weather data to predict future sanitary sewer overflow events.
+*Using weather data to predict future sanitary sewer overflow events.*
 
 ### Team
 Jeremy Cobb, Ryan McCall, Cameron Taylor, David Wederstrandt Sr
