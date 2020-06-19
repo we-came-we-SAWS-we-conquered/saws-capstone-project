@@ -2,6 +2,10 @@ import pandas as pd
 import os.path
 
 def acquire_sso():
+    '''
+    Checks if csv exists; if yes, reads csv. If no, reads url
+    into dataframe and writes to csv. Returns dataframe.
+    '''
     if os.path.isfile('sso_data.csv'):
         sso_data = pd.read_csv('sso_data.csv')
     else:
