@@ -44,7 +44,7 @@ def filter_sso_features(features = get_sso_dict_features()):
 def prepare_sso_df(df = filter_sso_features()):
     '''
     This function fixes datatypes, creates an extra feature, 
-    and fills some of the null values
+    fills some of the null values, and renames columns
     '''
     string_features = ['SSO_ID','SPILL_ADDRESS','COUNCIL_DISTRICT',]
     for col in string_features:
@@ -58,5 +58,15 @@ def prepare_sso_df(df = filter_sso_features()):
     for col in fill_features:
         df[col] = df[col].fillna(0)  
     df.Root_Cause = df.Root_Cause.str.strip()
+    df.ResponseTime = df.ResponseTime * 60
+    df.columns = ['sso_id','report_date','spill_address_num','spill_st_name',
+        'total_gal','gals_ret','spill_start','spill_stop','hrs','cause',
+        'comments','actions','watershed','unit_id','unit_id2','discharge_to',
+        'discharge_route','council_district','month','year','week',
+        'earz_zone','pipe_diam','pipe_len','pipe_type','inst_year','inches_no',
+        'rainfall_last3','spill_address_full','num_spills_recorded',
+        'num_spills_24mos','prevspill_24mos','unit_type','asset_type',
+        'last_cleaned','response_time','response_dttm','public_notice',
+        'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
     df['days_since_cleaned'] = (df.SPILL_START - df.LASTCLND).dt.days
     return df
