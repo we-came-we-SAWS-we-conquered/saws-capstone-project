@@ -1,5 +1,5 @@
 import pandas as pd
-import acquire
+import acquire_sso
 import os.path
 
 def read_sso_dict():
@@ -35,7 +35,7 @@ def filter_sso_features(features = get_sso_dict_features()):
     This function gets the sso_data and filters out features
     based on previous function
     '''
-    df = acquire.acquire_sso()
+    df = acquire_sso.acquire_sso()
     bad_features = list(df.columns[~df.columns.isin(features)])
     df = df.drop(columns = bad_features)
     df = df.drop(columns = ['TIMEINT','STEPS_TO_PREVENT'])
