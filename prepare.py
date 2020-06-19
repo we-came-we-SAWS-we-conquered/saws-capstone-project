@@ -59,6 +59,7 @@ def prepare_sso_df(df = filter_sso_features()):
         df[col] = df[col].fillna(0)  
     df.Root_Cause = df.Root_Cause.str.strip()
     df.ResponseTime = df.ResponseTime * 60
+    df['days_since_cleaned'] = (df.SPILL_START - df.LASTCLND).dt.days
     df.columns = ['sso_id','report_date','spill_address_num','spill_st_name',
         'total_gal','gals_ret','spill_start','spill_stop','hrs','cause',
         'comments','actions','watershed','unit_id','unit_id2','discharge_to',
@@ -68,5 +69,4 @@ def prepare_sso_df(df = filter_sso_features()):
         'num_spills_24mos','prevspill_24mos','unit_type','asset_type',
         'last_cleaned','response_time','response_dttm','public_notice',
         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
-    df['days_since_cleaned'] = (df.SPILL_START - df.LASTCLND).dt.days
     return df
