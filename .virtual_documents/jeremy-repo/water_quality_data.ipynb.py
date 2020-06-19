@@ -21,7 +21,7 @@ prcnt_sara.sort_values(ascending=False)
 
 
 url_data_dict_311 = '''https://storage.googleapis.com/sa_cosa_data/311DataExtractDataDictionary.xlsx'''
-pd.read_excel(url_data_dict_311)
+pd.read_excel(url_data_dict_311, header=2)
 
 
 
