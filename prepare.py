@@ -150,7 +150,7 @@ def create_311_coulmns(df):
             - 60_days, cases closed with 60 days or less from report to closed
             - 90_days, cases closed with 90 days or less from report to closed
     '''
-    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$')
+    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$').astype(str)
     df['assigned_due_date'] = df.assigned_due_date.fillna(df.date_time_opened)
     df['reported_date'] = pd.to_datetime(df['date_time_opened'])
     df['closed_date'] = pd.to_datetime(df['date_time_closed'])
@@ -190,5 +190,7 @@ def prepare_311(df):
     df = df[(df.event_name.str.contains('Drainage')) & (df.category == 'Streets & Infrastructure')]
     df.dropna(subset = ['zip_code'], inplace=True)
     df.dropna(subset = ['dept'], inplace=True)
+    df.to_csv('cleaned_311.csv')
+    df = pd.read_csv('cleaned_311.csv', index_col=0)
     
     return df
