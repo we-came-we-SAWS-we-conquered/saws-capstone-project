@@ -72,6 +72,9 @@ def prepare_sso_df(df = filter_sso_features()):
         'last_cleaned','response_time','response_dttm','public_notice',
         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
     df.root_cause = df.root_cause.str.lower()
+    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
+                               df.total_gal.max()])
+    df['total_gal_binned'] = x
     return df
 
 def prepare_sso_with_zipcodes(df = prepare_sso_df()):
@@ -95,9 +98,6 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
         for t,l in enumerate(df.location):
             if l is not None:
                 df['zip_code'][t] = l.raw['display_name'].split(',')[-2]
-    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
-                               df.total_gal.max()])
-    df['total_gal_binned'] = x
     # df.zip_code = df.zip_code.str.strip()
     # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
     return df
