@@ -142,6 +142,6 @@ def prepare_311(df):
     df = df.rename(columns=dictionary)
     df = create_311_coulmns(df)
     df = drop_311_columns(df)
-    df_311.dropna(subset = ['zip_code'], inplace=True)
+    df.dropna(subset = ['zip_code'], inplace=True)
     
     return df
