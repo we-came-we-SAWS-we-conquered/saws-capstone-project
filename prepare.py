@@ -84,8 +84,11 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     It checks if a csv exists, and uses that instead of running the
     code because it takes a very long time to gather all the data.
     '''
+    time_features = ['report_date','spill_start','spill_stop',
+                    'response_dttm', 'days_since_cleaned']
     if os.path.isfile('SSO_with_zip_codes.csv'):
-        df = pd.read_csv('SSO_with_zip_codes.csv')
+        df = pd.read_csv('SSO_with_zip_codes.csv', 
+                            parse_dates= time_features)
     else:
         locator = Nominatim(user_agent="myGeocoder")
         geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
