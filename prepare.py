@@ -1,6 +1,8 @@
 import pandas as pd
 import acquire
 import os.path
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
 
 def read_sso_dict():
     '''
@@ -74,6 +76,29 @@ def prepare_sso_df(df = filter_sso_features()):
                                df.total_gal.max()])
     df['total_gal_binned'] = x
     return df
+
+def prepare_sso_with_zipcodes(df = prepare_sso_df()):
+    '''
+    This function creates a zipcode column in the dataframe using 
+    geopy against the street address given in the raw data.
+    It checks if a csv exists, and uses that instead of running the
+    code because it takes a very long time to gather all the data.
+    '''
+    if os.path.isfile('SSO_with_zip_codes.csv'):
+        df = pd.read_csv('SSO_with_zip_codes.csv')
+    else:
+        locator = Nominatim(user_agent="myGeocoder")
+        geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
+                            max_retries=10, error_wait_seconds=1)
+        df['location'] = df['country_address'].apply(geocode)
+        df['zip_code'] = 'None'
+        for t,l in enumerate(df.location):
+            if l is not None:
+                df['zip_code'][t] = l.raw['display_name'].split(',')[-2]
+    # df.zip_code = df.zip_code.str.strip()
+    # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
+    return df
+
 
 # 311 prepare
 def rename_311_columns(df):
