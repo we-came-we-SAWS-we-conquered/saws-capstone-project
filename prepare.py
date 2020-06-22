@@ -118,12 +118,17 @@ def create_311_coulmns(df):
     df['closed_date'] = pd.to_datetime(df['date_time_closed'])
     df['due_date'] = pd.to_datetime(df['assigned_due_date'])
     df['closed_date'] = df.closed_date.fillna(pd.to_datetime('today'))
-    df['case_days_length'] = df.closed_date - df.reported_date
-    df['case_days_length'] = df.case_days_length.fillna(df.case_days_length.max())
-    df['report_to_assigned_days_length'] = df.due_date - df.reported_date
-    df['report_to_assigned_days_length'] = df.report_to_assigned_days_length.fillna(df.report_to_assigned_days_length.max())
-    df['days_past_due_length'] = df.closed_date - df.due_date
-    df['days_past_due_length'] = df.days_past_due_length.fillna(df.days_past_due_length.max())
+    df['case_days_length'] = (df.closed_date - df.reported_date)
+    df['case_days_length'] = (df.case_days_length.fillna(df.case_days_length.max())) 
+    df['report_to_assigned_days_length'] = (df.due_date - df.reported_date)
+    df['report_to_assigned_days_length'] = (df.report_to_assigned_days_length.fillna(df.report_to_assigned_days_length.max()))
+    df['report_to_assigned_days_length'] = (df.report_to_assigned_days_length.dt.days)
+    df['days_past_due_length'] = (df.closed_date - df.due_date)
+    df['days_past_due_length'] = (df.days_past_due_length.fillna(df.days_past_due_length.max()))
+    df['days_past_due_length'] = (df.case_days_length.dt.days)
+    df['30_days'] = df.case_days_length.dt.days <= 30
+    df['60_days'] = ((df.case_days_length.dt.days > 30) & (df.case_days_length.dt.days <= 60))
+    df['90_days'] = df.case_days_length.dt.days >= 90
     
     return df
 
@@ -142,6 +147,8 @@ def prepare_311(df):
     df = df.rename(columns=dictionary)
     df = create_311_coulmns(df)
     df = drop_311_columns(df)
+    df = df[(df.event_name.str.contains('Drainage')) & (df.category == 'Streets & Infrastructure')]
     df.dropna(subset = ['zip_code'], inplace=True)
+    df.dropna(subset = ['dept'], inplace=True)
     
     return df
