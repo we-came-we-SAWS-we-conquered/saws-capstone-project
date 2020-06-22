@@ -1,8 +1,86 @@
 import pandas as pd
+import numpy as np
+
 import acquire
+import re
 import os.path
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
+
+
+#sso = acquire.acquire_sso()
+three_11 = acquire.acquire_311()
+
+
+def prep_weather():
+    weather = acquire.acquire_weather()
+    # dropping columns with 100% null data
+    weather = weather.drop(columns=['WT19', "WT10"])
+    # imputing NaN's with 0; boolean false
+    weather = weather.fillna(0)
+    # creating year, month and day columns for aggregation
+    weather[['year', 'month', 'day']] = weather.DATE.str.split('-', expand=True)
+    weather.DATE = pd.to_datetime(weather.DATE)
+    return weather
+    
+
+def convert_street_311(df):
+    df[["street_address", 'city', 'zip_code', "something1", "something2"]] = df.OBJECTDESC.str.split(',', expand=True)
+    return df
+
+def regex_street(df):
+    df['street_name'] = df.street_address.str.replace(r'([\d]+)', '')
+    df['street_name'] = df['street_name'].str.lower()
+    df['street_name'] = df.street_name.replace(['street', 'st', 'dr', 'drive', 'avenue', 'ave', 'av', 'trail', 'tr','road', 'rd', 'lane', 'ln', 'boulevard', 'blvd', 'bv', 'parkway', 'pkwy'], '', regex=True)
+    return df
+
+def do_it():
+    df = convert_street_311(three_11)
+    df = regex_street(df)
+    return df
+
+
+def format_sso():
+    sso = acquire.acquire_sso()
+    sso['SPILL_ST_NAME'] = sso['SPILL_ST_NAME'].str.lower()
+    sso['SPILL_ST_NAME'] = sso['SPILL_ST_NAME'].replace(['street', 'st', 'dr', 'drive', 'avenue', 'ave', 'av', 'trail', 'tr','road', 'rd', 'lane', 'ln', 'boulevard', 'blvd', 'bv', 'parkway', 'pkwy'], '', regex=True)
+    return sso
+
+
+def wrangle_sso_311():
+    sso = acquire.acquire_sso()
+    weather = acquire.acquire_weather()
+    # do_it function formats 311 data for join to sso data
+    df = do_it()
+    # formating addresses in sso data
+    sso = format_sso()
+    # setting index for merge
+    sso = sso.set_index("SPILL_ST_NAME")
+    df = df.set_index("street_name")
+    df2 = pd.merge(sso,df, left_index=True, right_index=True)
+    df2 = df2.reset_index().rename(columns={'index':'street_name'})
+    return df2
+    
+    
+def wrangle():
+    weather = acquire.acquire_weather()
+    df = wrangle_sso_311()
+    weather = prep_weather()
+    # setting up sso date column as index to merge with weather data
+    df['REPORTDATE'] = pd.to_datetime(df['REPORTDATE'])
+    df['REPORTDATE'] = df['REPORTDATE'].dt.date
+    weather = weather.set_index("DATE")
+    df = df.set_index("REPORTDATE")
+    df = pd.merge(weather,df, left_index=True, right_index=True)
+    # resetting index after merge
+    df = df.reset_index().rename(columns={'index':'REPORTDATE'})
+    return df
+
+# old prepare stuff^
+
+************************************
+
+# New prepare stuff
 
 def read_sso_dict():
     '''
@@ -84,11 +162,8 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     It checks if a csv exists, and uses that instead of running the
     code because it takes a very long time to gather all the data.
     '''
-    time_features = ['report_date','spill_start','spill_stop',
-                    'response_dttm', 'days_since_cleaned']
     if os.path.isfile('SSO_with_zip_codes.csv'):
-        df = pd.read_csv('SSO_with_zip_codes.csv', 
-                            parse_dates= time_features)
+        df = pd.read_csv('SSO_with_zip_codes.csv')
     else:
         locator = Nominatim(user_agent="myGeocoder")
         geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
@@ -153,7 +228,7 @@ def create_311_coulmns(df):
             - 60_days, cases closed with 60 days or less from report to closed
             - 90_days, cases closed with 90 days or less from report to closed
     '''
-    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$').astype(str)
+    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$')
     df['assigned_due_date'] = df.assigned_due_date.fillna(df.date_time_opened)
     df['reported_date'] = pd.to_datetime(df['date_time_opened'])
     df['closed_date'] = pd.to_datetime(df['date_time_closed'])
@@ -193,7 +268,5 @@ def prepare_311(df):
     df = df[(df.event_name.str.contains('Drainage')) & (df.category == 'Streets & Infrastructure')]
     df.dropna(subset = ['zip_code'], inplace=True)
     df.dropna(subset = ['dept'], inplace=True)
-    df.to_csv('cleaned_311.csv')
-    df = pd.read_csv('cleaned_311.csv', index_col=0)
     
     return df
