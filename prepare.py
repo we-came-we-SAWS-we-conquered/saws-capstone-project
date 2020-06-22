@@ -85,7 +85,8 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
                     'response_dttm', 'days_since_cleaned']
     if os.path.isfile('SSO_with_zip_codes.csv'):
         df = pd.read_csv('SSO_with_zip_codes.csv', 
-                            parse_dates= time_features)
+                            parse_dates= time_features, 
+                            )
     else:
         locator = Nominatim(user_agent="myGeocoder")
         geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
@@ -98,6 +99,7 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
                                df.total_gal.max()])
     df['total_gal_binned'] = x
+    df.days_since_cleaned = df.days_since_cleaned.astype(float)
     # df.zip_code = df.zip_code.str.strip()
     # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
     return df
