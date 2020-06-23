@@ -1,11 +1,10 @@
 import pandas as pd
-import numpy as np
-
 import acquire
 import re
 import os.path
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
+
 
 
 #sso = acquire.acquire_sso()
@@ -78,9 +77,15 @@ def wrangle():
 
 # old prepare stuff^
 
-************************************
+#************************************
 
 # New prepare stuff
+
+import pandas as pd
+import acquire
+import os.path
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
 
 def read_sso_dict():
     '''
@@ -150,9 +155,6 @@ def prepare_sso_df(df = filter_sso_features()):
         'last_cleaned','response_time','response_dttm','public_notice',
         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
     df.root_cause = df.root_cause.str.lower()
-    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
-                               df.total_gal.max()])
-    df['total_gal_binned'] = x
     return df
 
 def prepare_sso_with_zipcodes(df = prepare_sso_df()):
@@ -162,8 +164,12 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     It checks if a csv exists, and uses that instead of running the
     code because it takes a very long time to gather all the data.
     '''
+    time_features = ['report_date','spill_start','spill_stop',
+                    'response_dttm', 'days_since_cleaned']
     if os.path.isfile('SSO_with_zip_codes.csv'):
-        df = pd.read_csv('SSO_with_zip_codes.csv')
+        df = pd.read_csv('SSO_with_zip_codes.csv', 
+                            parse_dates= time_features, 
+                            )
     else:
         locator = Nominatim(user_agent="myGeocoder")
         geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
@@ -173,6 +179,10 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
         for t,l in enumerate(df.location):
             if l is not None:
                 df['zip_code'][t] = l.raw['display_name'].split(',')[-2]
+    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
+                               df.total_gal.max()])
+    df['total_gal_binned'] = x
+    df.days_since_cleaned = df.days_since_cleaned.astype(float)
     # df.zip_code = df.zip_code.str.strip()
     # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
     return df
@@ -228,7 +238,7 @@ def create_311_coulmns(df):
             - 60_days, cases closed with 60 days or less from report to closed
             - 90_days, cases closed with 90 days or less from report to closed
     '''
-    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$')
+    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$').astype(str)
     df['assigned_due_date'] = df.assigned_due_date.fillna(df.date_time_opened)
     df['reported_date'] = pd.to_datetime(df['date_time_opened'])
     df['closed_date'] = pd.to_datetime(df['date_time_closed'])
@@ -268,5 +278,107 @@ def prepare_311(df):
     df = df[(df.event_name.str.contains('Drainage')) & (df.category == 'Streets & Infrastructure')]
     df.dropna(subset = ['zip_code'], inplace=True)
     df.dropna(subset = ['dept'], inplace=True)
+    df.to_csv('cleaned_311.csv')
+    df = pd.read_csv('cleaned_311.csv', index_col=0)
     
     return df
+
+def remove_weather_columns(df):
+    '''
+    Takes in the weather dataframe, removes listed columns and returns the dataframe
+    '''
+    return df.drop(
+        columns=[
+            "STATION",
+            "AWND",
+            "FMTM",
+            "PGTM",
+            "WDF2",
+            "WDF5",
+            "WSF2",
+            "WSF5",
+            "WT06",
+            "WT07",
+            "WT08",
+            "WT10",
+            "WT11",
+            "WT13",
+            "WT17",
+            "WT18",
+            "WT19",
+        ]
+    )
+
+
+def fix_weather_column_names(df):
+    '''
+    Takes in the weather dataframe and fixes the column names and returns a dataframe
+    '''
+    keys = df.columns.tolist()
+
+    values = [
+        "date",
+        "precipitation",
+        "snowfall",
+        "snow_depth",
+        "avg_temp",
+        "max_temp",
+        "min_temp",
+        "foggy",
+        "heavy_fog",
+        "thunder",
+        "hail",
+        "blowing_snow",
+        "rain",
+    ]
+
+    col_name_dict = dict(zip(keys, values))
+
+    return df.rename(columns=col_name_dict)
+
+def handle_missing_weather_data(df):
+    '''
+    Takes in the weather dataframe and handles missing data and returns a dataframe
+    '''
+    df.avg_temp = df.avg_temp.fillna((df.max_temp + df.min_temp) / 2)
+    
+    boolean_columns = ['foggy','heavy_fog','thunder','hail','blowing_snow','rain']
+
+    for column in boolean_columns:
+        df[f'{column}'] = df[f'{column}'].fillna(0).astype(int)
+    
+    return df
+
+def add_features(df):
+    '''
+    Takes in the weather dataframe and adds new features and returns a dataframe
+    '''
+    rolling_periods = [7, 14, 30]
+    features = ['precipitation', 'avg_temp', 'max_temp', 'min_temp']
+
+    for feature in features:
+        for period in rolling_periods:
+            df[f'{feature}_rolling_{period}'] = df[f'{feature}'].rolling(period).mean()
+    
+    return df
+
+def prep_weather_data():
+    '''
+    Takes no arguments and returns a clean weather dataframe
+    '''
+    weather = acquire.acquire_weather()
+    weather = remove_weather_columns(weather)
+    weather = fix_weather_column_names(weather)
+    weather = handle_missing_weather_data(weather)
+    weather.date = pd.to_datetime(weather.date)
+    weather = weather.sort_values("date").set_index("date")
+    weather = add_features(weather)
+    
+    return weather
+
+def get_data():
+    weather = prep_weather_data()
+    sso = prepare_sso_with_zipcodes()
+    data = sso.merge(weather, left_on='report_date', right_index=True)
+    
+    return data
