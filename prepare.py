@@ -118,8 +118,10 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
                                         .apply(round).astype(str)
     df.unit_type = df.unit_type.replace(np.NaN, 'unknown')
     df.asset_type = df.asset_type.replace(np.NaN, 'unknown')
-
-    # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
+    df.root_cause = df.root_cause.replace(np.NaN,'other')
+    df.age = df.age.replace(np.NaN, 'unknown')
+    df.pipe_type = df.pipe_type.fillna('unknown')
+    # df.age_binned = df.age_binned.fillna('Unknown')
     return df
 
 
