@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import acquire
 import os.path
 from geopy.extra.rate_limiter import RateLimiter
@@ -72,9 +73,6 @@ def prepare_sso_df(df = filter_sso_features()):
         'last_cleaned','response_time','response_dttm','public_notice',
         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
     df.root_cause = df.root_cause.str.lower()
-    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
-                               df.total_gal.max()])
-    df['total_gal_binned'] = x
     return df
 
 def prepare_sso_with_zipcodes(df = prepare_sso_df()):
@@ -83,12 +81,14 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     geopy against the street address given in the raw data.
     It checks if a csv exists, and uses that instead of running the
     code because it takes a very long time to gather all the data.
+    It imputes some columns and adds a few new features.
     '''
     time_features = ['report_date','spill_start','spill_stop',
                     'response_dttm', 'days_since_cleaned']
     if os.path.isfile('SSO_with_zip_codes.csv'):
         df = pd.read_csv('SSO_with_zip_codes.csv', 
-                            parse_dates= time_features)
+                            parse_dates= time_features, 
+                            )
     else:
         locator = Nominatim(user_agent="myGeocoder")
         geocode = RateLimiter(locator.geocode, min_delay_seconds=.1, 
@@ -98,7 +98,25 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
         for t,l in enumerate(df.location):
             if l is not None:
                 df['zip_code'][t] = l.raw['display_name'].split(',')[-2]
-    # df.zip_code = df.zip_code.str.strip()
+    x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
+                               df.total_gal.max()])
+    df['total_gal_binned'] = x
+    df.days_since_cleaned = df.days_since_cleaned.astype(float)
+    df.zip_code = df.zip_code.str.strip()
+    
+    df.inst_year = df.inst_year.replace(9999,pd.NA)
+    df['age'] = df.spill_start.dt.year - df.inst_year
+    df.inst_year = df.inst_year.astype(str).replace('nan', 'unknown')
+    df.age = df.age.replace([-3,-2,-1], pd.NA)
+    z = pd.cut(df.age, bins=list(range(0,130,5)))
+    df['age_binned'] = z
+    df['time_spilled'] = df.spill_stop - df.spill_start
+    df.discharge_route = df.discharge_route.replace(pd.NA,'none')
+    df.earz_zone = df.earz_zone.replace(np.NaN, 0.0)\
+                                        .apply(round).astype(str)
+    df.unit_type = df.unit_type.replace(np.NaN, 'unknown')
+    df.asset_type = df.asset_type.replace(np.NaN, 'unknown')
+
     # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
     return df
 
