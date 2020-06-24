@@ -29,20 +29,18 @@ def age_stats(df):
             t, p = stats.ttest_1samp(i, overall_age)
         
             print(f'Root Cause: {l}')
-            print(f'H_null: {l} is not correlated with the cause of the pipe damage involving the age of the sewer')
-            print(f'H_alt: {l} is correlated with the cause of the pipe damage involving the age of the sewer') 
-            print(' with a alpha of {:.2f}:'.format(alpha))
+            print(f'H_null: The age of the sewer is not correlated as the cause of the pipe damage involving {l}')
+            print(f'H_alt: The age of the sewer is correlated as the cause of the pipe damage involving {l}') 
+            print(' with an alpha of {:.2f} and a p-value of {}:\n'.format(alpha, p))
         
             if p < alpha:
-                print(f"  We reject the null hypothesis. P-value: {p}")
-                print(f"  {l} is correlated with the cause of the pipe damage involving the age of the sewer\n")
-                print('-'*100)
+                print(f"We reject the null hypothesis. ")
+                print(f"  The age of the sewer is correlated as the cause of the pipe damage involving {l}\n")          
                 related_list.extend(l)
-       
             else:
-                print(f"  We fail to reject the null hypothesis P-value: {p}")
-                print(f"  {l} is not correlated with the cause of the pipe damage involving the age of the sewer\n")
-                
+                print(f"We fail to reject the null hypothesis.")
+                print(f"  The age of the sewer is not correlated as the cause of the pipe damage involving {l}\n")
+        print('-'*100)           
     return related_list
 
 def age_explore(df):
