@@ -24,6 +24,16 @@ def rename_311_columns(df):
             "Report Ending Date": "Report_Ending_Date"
         })
 
+
+def negative_clean_up(value):
+    """
+    Converts all negative values to 0
+    """
+    if value<0:
+        return 0
+    else:
+        return(value)
+
 def create_311_coulmns(df):
     '''
     Returns a dataframe
@@ -33,27 +43,32 @@ def create_311_coulmns(df):
             - reported_date, date the case was reported 
             - closed_date, date the case was closed
             - due_date, date the case should be completed
-            - case_days_length, length of days from report to close
-            - report_to_assigned_days_length, length of days from report to assigned
-            - days_past_due_length, length of days past the due date
+            - case_days, length of days from report to close
+            - report_to_assigned_days, length of days from report to assigned
+            - days_past_due, length of days past the due date
+            - 30_days, cases closed with 30 days or less from report to closed
+            - 60_days, cases closed with 60 days or less from report to closed
+            - 90_days, cases closed with 90 days or less from report to closed
     '''
-    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$')
+    df['zip_code'] = df.event_address.str.extract(r'.+(\d{5}?)$').astype('str')
     df['assigned_due_date'] = df.assigned_due_date.fillna(df.date_time_opened)
     df['reported_date'] = pd.to_datetime(df['date_time_opened'])
     df['closed_date'] = pd.to_datetime(df['date_time_closed'])
     df['due_date'] = pd.to_datetime(df['assigned_due_date'])
     df['closed_date'] = df.closed_date.fillna(pd.to_datetime('today'))
-    df['case_days_length'] = (df.closed_date - df.reported_date)
-    df['case_days_length'] = (df.case_days_length.fillna(df.case_days_length.max())) 
-    df['report_to_assigned_days_length'] = (df.due_date - df.reported_date)
-    df['report_to_assigned_days_length'] = (df.report_to_assigned_days_length.fillna(df.report_to_assigned_days_length.max()))
-    df['report_to_assigned_days_length'] = (df.report_to_assigned_days_length.dt.days)
-    df['days_past_due_length'] = (df.closed_date - df.due_date)
-    df['days_past_due_length'] = (df.days_past_due_length.fillna(df.days_past_due_length.max()))
-    df['days_past_due_length'] = (df.case_days_length.dt.days)
-    df['30_days'] = df.case_days_length.dt.days <= 30
-    df['60_days'] = ((df.case_days_length.dt.days > 30) & (df.case_days_length.dt.days <= 60))
-    df['90_days'] = df.case_days_length.dt.days >= 90
+    df['case_days'] = (df.closed_date - df.reported_date)
+    df['case_days'] = (df.case_days.fillna(df.case_days.max())) 
+    df['case_days'] = (df.case_days.dt.days)
+    df['report_to_assigned_days'] = (df.due_date - df.reported_date)
+    df['report_to_assigned_days'] = (df.report_to_assigned_days.fillna(df.report_to_assigned_days.max()))
+    df['report_to_assigned_days'] = (df.report_to_assigned_days.dt.days)
+    df['days_past_due'] = (df.closed_date - df.due_date)
+    df['days_past_due'] = (df.days_past_due.fillna(df.days_past_due.max()))
+    df['days_past_due'] = (df.days_past_due.dt.days)
+    df['days_past_due'] = df['days_past_due'].apply(negative_clean_up)
+    df['30_days'] = df.case_days <= 30
+    df['60_days'] = ((df.case_days > 30) & (df.case_days <= 60))
+    df['90_days'] = df.case_days >= 90
     
     return df
 
@@ -62,7 +77,7 @@ def drop_311_columns(df):
 
 def prepare_311(df):
     '''
-    Returns a dataframe
+    Returns a cleaned dataframe of the 311 data 
     '''
     df = rename_311_columns(df)
     keys = df.columns.to_list()
