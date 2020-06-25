@@ -4,6 +4,7 @@ import acquire
 import os.path
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
+from datetime import timedelta
 
 def read_sso_dict():
     '''
@@ -110,14 +111,17 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     df.age = df.age.replace([-3,-2,-1], pd.NA)
     z = pd.cut(df.age, bins=list(range(0,130,5)))
     df['age_binned'] = z
-    df['time_spilled'] = df.spill_stop - df.spill_start
+    df['hours_spilled'] = df.spill_stop - df.spill_start
+    df.hours_spilled = df.hours_spilled / timedelta (hours=1)
     df.discharge_route = df.discharge_route.replace(pd.NA,'none')
     df.earz_zone = df.earz_zone.replace(np.NaN, 0.0)\
                                         .apply(round).astype(str)
     df.unit_type = df.unit_type.replace(np.NaN, 'unknown')
     df.asset_type = df.asset_type.replace(np.NaN, 'unknown')
-
-    # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
+    df.root_cause = df.root_cause.replace(np.NaN,'other')
+    df.age = df.age.replace(np.NaN, 'unknown')
+    df.pipe_type = df.pipe_type.fillna('unknown')
+    # df.age_binned = df.age_binned.fillna('Unknown')
     return df
 
 
