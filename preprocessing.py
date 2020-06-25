@@ -34,7 +34,7 @@ def remove_columns(df):
         "discharge_to",
         "discharge_route",
         "council_district",
-        "time_spilled",
+        "hours_spilled",
         "hrs",
         "gals_ret",
         "pipe_diam",
