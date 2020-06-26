@@ -6,7 +6,7 @@ import prepare
 
 
 def remove_columns(df):
-    columns_to_drop_from_model = columns_to_drop_from_model = [
+    columns_to_drop_from_model = [
         "sso_id",
         "report_date",
         "spill_address_num",
@@ -37,19 +37,20 @@ def remove_columns(df):
         "hours_spilled",
         "hrs",
         "gals_ret",
-        "pipe_diam",
-        "pipe_len",
-        "response_time",
-        "days_since_cleaned",
-        "age",
+        "response_time"
     ]
 
     return df.drop(columns=columns_to_drop_from_model)
 
 
 def fix_nas(df):
-    df.pipe_type = df.pipe_type.fillna("Unknown")
-    df.root_cause = df.root_cause.fillna("Unknown")
+    df.pipe_type = df.pipe_type.fillna('Unknown')
+    df.root_cause = df.root_cause.fillna('Unknown')
+    df.days_since_cleaned = df.days_since_cleaned.fillna(df.days_since_cleaned.median())
+    df.pipe_diam = df.pipe_diam.fillna(df.pipe_diam.median())
+    df.pipe_len = df.pipe_len.fillna(df.pipe_len.median())
+    df.age = df.age.replace('unknown', 0)
+    df.age = df.age.replace(0, df.age.median())
     return df
 
 
