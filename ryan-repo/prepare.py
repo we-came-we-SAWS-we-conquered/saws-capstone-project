@@ -102,7 +102,8 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
                                df.total_gal.max()])
     df['total_gal_binned'] = x
-    df.days_since_cleaned = df.days_since_cleaned.astype(float)
+    df.days_since_cleaned = df.days_since_cleaned.astype(float)\
+                            .fillna(df.days_since_cleaned.median())
     df.zip_code = df.zip_code.str.strip()
     
     df.inst_year = df.inst_year.replace(9999,pd.NA)
@@ -113,15 +114,16 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     df['age_binned'] = z
     df['hours_spilled'] = df.spill_stop - df.spill_start
     df.hours_spilled = df.hours_spilled / timedelta (hours=1)
-    df.discharge_route = df.discharge_route.replace(pd.NA,'none')
+    df.discharge_route = df.discharge_route.fillna('none')
     df.earz_zone = df.earz_zone.replace(np.NaN, 0.0)\
                                         .apply(round).astype(str)
-    df.unit_type = df.unit_type.replace(np.NaN, 'unknown')
-    df.asset_type = df.asset_type.replace(np.NaN, 'unknown')
-    df.root_cause = df.root_cause.replace(np.NaN,'other')
-    df.age = df.age.replace(np.NaN, 'unknown')
+    df.unit_type = df.unit_type.fillna('unknown')
+    df.asset_type = df.asset_type.fillna('unknown')
+    df.root_cause = df.root_cause.fillna('other')
+    df.age = df.age.fillna(df.age.median())
     df.pipe_type = df.pipe_type.fillna('unknown')
-    # df.age_binned = df.age_binned.fillna('Unknown')
+    df.pipe_diam = df.pipe_diam.fillna(df.pipe_diam.median())
+    df.pipe_len = df.pipe_len.fillna(df.pipe_len.median())
     return df
 
 
