@@ -49,7 +49,6 @@ def age_explore(df):
     - displays the visual of age vs root causes
     - prints the stats test for all root causes and age of sewer
     '''
-    df = df[df.age != 'unknown']
     get_age_visual(df)
     return age_stats(df)
 
