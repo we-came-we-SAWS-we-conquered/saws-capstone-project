@@ -13,7 +13,7 @@ plt.figure(figsize=(16,8))
 def get_age_visual(df):
     plt.figure(figsize=(16,8))
     sns.swarmplot(x="root_cause", y="age", data=df)
-    plt.ylabel("Age")
+    plt.ylabel("Age of Sewer")
     plt.xlabel("Root Cause of SSO Event")
     plt.show()
 
