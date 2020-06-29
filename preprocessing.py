@@ -80,7 +80,7 @@ def encode_categorical_columns(df):
             values = df[f"{column}"].astype(str).str.lower().unique()
 
             for value in values:
-                df[f"{column}_is_{value}"] = (df[f"{column}"] == value).astype(int)
+                df[f"{column}_is_{value}"] = (df[f"{column}"].astype(str).str.lower() == value).astype(int)
 
             df = df.drop(columns=column)
 
