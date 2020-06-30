@@ -155,9 +155,9 @@ We are to discover and identify opportunities and/or missing data elements in th
     * Our acquire.py file has functions to individually acquire each of the three datasets we used.
 3. Preparing the data:
     * The SAWS data only contained street addresses, not ZIP codes, so we used GeoPy to extract the zip codes. GeoPy will need to be installed on your system if you want to prepare the SAWS data the same way we did. 
-        <div class="alert alert-block alert-warning">
-        If you do run our prepare.py file, the process of creating the ZIP code column takes at least 20 minutes.
-        </div>
+        ```diff
+        ! If you do run our prepare.py file, the process of creating the ZIP code column takes at least 20 minutes !
+        ```
     * The joined SAWS and weather dataset can be gotten using the get_data() function in our prepare.py file.
 4. Exploring the data:
     * Our explore.py file can be used to make graphs of the data and to run statistical tests on our hypotheses.
