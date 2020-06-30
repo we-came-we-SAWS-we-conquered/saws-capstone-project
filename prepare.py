@@ -348,6 +348,9 @@ def prep_weather_data():
     return weather
 
 def get_data():
+    '''
+    This is the only function needed to run to get a dataframe with weather and sso data
+    '''
     weather = prep_weather_data()
     sso = prepare_sso_with_zipcodes()
     data = sso.merge(weather, left_on='report_date', right_index=True)

@@ -1,16 +1,21 @@
 # We Came, We SAWS, We Conquered Capstone Project
 
-## Data Science Analysis of San Antonio Water System (SAWS) 
-We are building a classification model for our codeup capstone project/entry for the 2020 San Antonio CivTech Datathon: to predict root cause of sewer spills and damages, using sewer data, 311 data and multitude of other sources from the city of San Antonio.
+### Project Links:
+##### [CivTechSa](https://www.civtech-sa.com/datathon)
+##### [Datathon 2020](https://sites.google.com/respec.com/smartsa-datathon-2019/home)
+##### [Canva Presentation](https://www.canva.com/design/DAEAAkd7T-I/FPngBViS_VfBWrovCdfylg/edit)
+
+### Project Description: 
+#### Data Science Analysis of San Antonio Water System (SAWS) 
+Our goal is predicting the root cause of sewer overflow events in the city of San Antonio. Using sanitary sewer overflow data from San Antonio Water System (SAWS) and weather data from the NOAA, our project will be able to give our city a better understanding of the cause of these events and in turn help better prepare SAWS for those events in the future. It is important to identify the cause of these events because the city spends over $100 million dollars a year on correcting issues with the sewers.
 
 ### Hypothesis:
 - Amount of rain and root cause are related.
-- Whether it rains and root cause are related.
+- Age of sewer and root cause are related.
 - Temperature and root cause are related.
-- Low 311 call response rate and root cause are related.
-    ### Secondary Hypothesis
-    - SSO events and water quality are related.
 
+### Results:
+- We used a decision tree classification machine learning model to predict root causes of SSO events, and using the branches of the trees it created we came up with a way to make a checklist that can be compared against any sewer to determine if it might be likely to experience an overflow event in the near future, what is the most likely cause for such an event, and potential steps that can be taken in order to reduce the chance of such an event happening. All of these combined can be used by SAWS to vastly reduce the amount of spending needed to fix sewers when they break.
 
 ### Team
 Jeremy Cobb, Ryan McCall, Cameron Taylor, David Wederstrandt Sr
@@ -139,14 +144,25 @@ WT18 | Snow, snow pellets, snow grains, or ice crystals |
 WT19 | Unknown source of precipitation |
 
 
-
-
-
-### Project Links:
-##### CivTechSa https://www.civtech-sa.com/datathon
-##### Datathon 2020 https://sites.google.com/respec.com/smartsa-datathon-2019/home
-
 ### CivTechSa's purpose for Datathon:
 We are to discover and identify opportunities and/or missing data elements in the data sets and explain how those insights could be applied in practice for the potential benefits of the community and/or partners.
 
 
+### How to reproduce what we did:
+1. Clone the repo
+2. Acquiring the data:
+    * We heavily use pandas and numpy in all our code, so those need to be installed on your system, as well as Python itself, of course.
+    * Our acquire.py file has functions to individually acquire each of the three datasets we used.
+3. Preparing the data:
+    * The SAWS data only contained street addresses, not ZIP codes, so we used GeoPy to extract the zip codes. GeoPy will need to be installed on your system if you want to prepare the SAWS data the same way we did. 
+        <div class="alert alert-block alert-warning">
+        If you do run our prepare.py file, the process of creating the ZIP code column takes at least 20 minutes.
+        </div>
+    * The joined SAWS and weather dataset can be gotten using the get_data() function in our prepare.py file.
+4. Exploring the data:
+    * Our explore.py file can be used to make graphs of the data and to run statistical tests on our hypotheses.
+    * This file makes use of matplotlib, scipy, and seaborn, so all of those need to be installed.
+5. Preprocessing the data:
+    * Our data can be made ready for modeling using the preprocessing.py file with the function get_model_data().
+6. Modeling the data:
+    * We split our data into train, validate, and test sets using a random state set to 13 at a percentage split of 60/20/20 respectively.
