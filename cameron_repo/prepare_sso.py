@@ -1,6 +1,10 @@
 import pandas as pd
+import numpy as np
 import acquire_sso
 import os.path
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
+from datetime import timedelta
 
 def read_sso_dict():
     '''
@@ -208,7 +212,7 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     df.unit_type = df.unit_type.fillna('unknown')
     df.asset_type = df.asset_type.fillna('unknown')
     df.root_cause = df.root_cause.fillna('other')
-    df.age = df.age.fillna(df.age.median())
+    # df.age = df.age.fillna(df.age.median())
     df.pipe_type = df.pipe_type.fillna('unknown')
     df.pipe_diam = df.pipe_diam.fillna(df.pipe_diam.median())
     df.pipe_len = df.pipe_len.fillna(df.pipe_len.median())
