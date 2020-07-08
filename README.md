@@ -1,9 +1,10 @@
 # We Came, We SAWS, We Conquered Capstone Project
 
 ### Project Links:
-##### [CivTechSa](https://www.civtech-sa.com/datathon)
-##### [Datathon 2020](https://sites.google.com/respec.com/smartsa-datathon-2019/home)
-##### [Canva Presentation](https://www.canva.com/design/DAEAAkd7T-I/FPngBViS_VfBWrovCdfylg/edit)
+* ##### [CivTechSa](https://www.civtech-sa.com/datathon)
+* ##### [Datathon 2020](https://sites.google.com/respec.com/smartsa-datathon-2019/home)
+* ##### [Canva Presentation](https://www.canva.com/design/DAEAAkd7T-I/FPngBViS_VfBWrovCdfylg/edit)
+* ##### [Final Report](We_Came_We_SAWS_We_Conquered.pdf)
 
 ### Project Description: 
 #### Data Science Analysis of San Antonio Water System (SAWS) 
