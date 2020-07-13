@@ -6,6 +6,9 @@ import prepare
 
 
 def remove_columns(df):
+    '''
+    This function drops many columns from the data that we found to be not useful in modeling
+    '''
     columns_to_drop_from_model = [
         "sso_id",
         "report_date",
@@ -44,6 +47,9 @@ def remove_columns(df):
 
 
 def fix_nas(df):
+    '''
+    This function fills the remaining Null values in the data.
+    '''
     df.pipe_type = df.pipe_type.fillna('Unknown')
     df.root_cause = df.root_cause.fillna('Unknown')
     df.days_since_cleaned = df.days_since_cleaned.fillna(df.days_since_cleaned.median())
@@ -55,6 +61,9 @@ def fix_nas(df):
 
 
 def encode_categorical_columns(df):
+    '''
+    This function manually encodes our columns into 1s and 0s, resulting in over 200 new columns
+    '''
     categorical_columns = [
         "watershed",
         "earz_zone",
@@ -67,30 +76,27 @@ def encode_categorical_columns(df):
     ]
 
     for column in categorical_columns:
-
         if is_numeric_dtype(df[f"{column}"]):
             values = df[f"{column}"].unique()
-
             for value in values:
                 df[f"{column}_is_{value}"] = (df[f"{column}"] == value).astype(int)
-
             df = df.drop(columns=column)
 
         elif is_string_dtype(df[f"{column}"]):
             values = df[f"{column}"].astype(str).str.lower().unique()
-
             for value in values:
-                df[f"{column}_is_{value}"] = (df[f"{column}"] == value).astype(int)
-
+                df[f"{column}_is_{value}"] = (df[f"{column}"].astype(str).str.lower() == value).astype(int)
             df = df.drop(columns=column)
-
     return df
 
 
 def get_model_data():
+    '''
+    This is the only function needed to run to return a dataframe useable in modeling
+    '''
     data = prepare.get_data()
     data = remove_columns(data)
     data = fix_nas(data)
     data = encode_categorical_columns(data)
-
+    data = data.dropna()
     return data
