@@ -98,5 +98,5 @@ def get_model_data():
     data = remove_columns(data)
     data = fix_nas(data)
     data = encode_categorical_columns(data)
-
+    data = data.dropna()
     return data

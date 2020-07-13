@@ -4,6 +4,7 @@ import pandas as pd
 import seaborn as sns
 
 pd.set_option('display.max_columns', None)
+plt.rcParams.update({'font.size': 15})
 
 from math import sqrt
 from scipy import stats
@@ -74,8 +75,9 @@ def age_stats(df, alpha):
 
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that the age of the sewer is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that the age of the sewer is correlated as the cause of the pipe damage invloving: \n")
+    plot_list = []
+    related_list.append("We reject the null hypothesis that the age of the sewer is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that the age of the sewer is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak':
@@ -84,6 +86,7 @@ def age_stats(df, alpha):
         
             if p < alpha:
                 related_list.append(' {} with an alpha of {:.2f} and a p-value of {}:'.format(l, alpha, p))
+                plot_list.append()
             
             else:
                 not_related_list.append(' {} with an alpha of {:.2f} and a p-value of {}:'.format(l, alpha, p))
@@ -101,8 +104,8 @@ def rainfall_stats(df, alpha):
     overall_rainfall = df.precipitation.mean()
 
     print('\n\nHypothesis Testing:')
-    print(f'H_null: The anount of rainfall is not correlated as the cause of the pipe damage involving a root_cause.')
-    print(f'H_alt: The anount of rainfall is correlated as the cause of the pipe damage involving a root cause.')
+    print(f'H_null: The amount of rainfall is not correlated as the cause of the pipe damage involving a root_cause.')
+    print(f'H_alt: The amount of rainfall is correlated as the cause of the pipe damage involving a root cause.')
 
     root_causes = ''
     for l in root_cause_list:
@@ -111,8 +114,8 @@ def rainfall_stats(df, alpha):
 
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that the amount of rainfall is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that the amount of rainfall is correlated as the cause of the pipe damage invloving: \n")
+    related_list.append("We reject the null hypothesis that the amount of rainfall is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that the amount of rainfall is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak':
@@ -171,8 +174,8 @@ def rain_stats(df, alpha):
     rain = df.rain
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that rain is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that rain is correlated as the cause of the pipe damage invloving: \n")
+    related_list.append("We reject the null hypothesis that rain is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that rain is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak': 
@@ -210,8 +213,8 @@ def max_temp_stats(df, alpha):
 
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that max tempurature is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that max tempurature is correlated as the cause of the pipe damage invloving: \n")
+    related_list.append("We reject the null hypothesis that max tempurature is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that max tempurature is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak':
@@ -247,8 +250,8 @@ def min_temp_stats(df, alpha):
 
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that minimum temperature is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that minimum temperature is correlated as the cause of the pipe damage invloving: \n")
+    related_list.append("We reject the null hypothesis that minimum temperature is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that minimum temperature is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak':
@@ -284,8 +287,8 @@ def avg_temp_stats(df, alpha):
 
     related_list = []
     not_related_list = []
-    related_list.append("We reject the null hypothesis that the average temperature is correlated as the cause of the pipe damage invloving: \n")
-    not_related_list.append("We fail to reject the null hypothesis that the average temperature is correlated as the cause of the pipe damage invloving: \n")
+    related_list.append("We reject the null hypothesis that the average temperature is not correlated as the cause of the pipe damage invloving: \n")
+    not_related_list.append("We fail to reject the null hypothesis that the average temperature is not correlated as the cause of the pipe damage invloving: \n")
 
     for l in root_cause_list:
         if l != 'by pass pump leak':
@@ -306,34 +309,54 @@ def avg_temp_stats(df, alpha):
 
 # function for calling each explore       
 def explore_age(df):
+    '''
+    Displays the information of age vs root causes
+    - displays
+    '''
     get_age_visual(df)
     age_stats(df, alpha)
     
 def explore_rainfall(df):
+    '''
+    Displays the information of rainfall vs root causes
+    -
+    '''
     df = df[df.precipitation != 'unknown']
     get_rainfall_visual(df)
     rainfall_stats(df, alpha)
     
 def explore_rain(df):
+    '''
+    Displays the information of rain vs root causes
+    - 
+    '''
     df = df[df.rain != 'unknown']
     rain_stats_overview(df, alpha)
     get_rain_visual(df)
     rain_stats(df, alpha)
     
 def explore_max_temp(df):
+    '''
+    Displays the information of max temp vs root causes
+    - 
+    '''
     df = df[df.max_temp != 'unknown']
     get_max_temp_visual(df)
     max_temp_stats(df, alpha)
     
 def explore_min_temp(df):
+    '''
+    Displays the information of min temp vs root causes
+    - 
+    '''
     df = df[df.min_temp != 'unknown']
     get_min_temp_visual(df)
     min_temp_stats(df, alpha)
 
 def explore_avg_temp(df):
     '''
-    Displays the visual of age vs root causes
-    - prints the stats test for all root causes and age of sewer
+    Displays the information of avg temp vs root causes
+    - 
     '''
     df = df[df.avg_temp != 'unknown']
     get_avg_temp_visual(df)
