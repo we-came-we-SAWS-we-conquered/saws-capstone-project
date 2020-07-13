@@ -1,91 +1,10 @@
 import pandas as pd
-import acquire
-import re
-import os.path
-from geopy.extra.rate_limiter import RateLimiter
-from geopy.geocoders import Nominatim
-
-
-
-#sso = acquire.acquire_sso()
-three_11 = acquire.acquire_311()
-
-
-def prep_weather():
-    weather = acquire.acquire_weather()
-    # dropping columns with 100% null data
-    weather = weather.drop(columns=['WT19', "WT10"])
-    # imputing NaN's with 0; boolean false
-    weather = weather.fillna(0)
-    # creating year, month and day columns for aggregation
-    weather[['year', 'month', 'day']] = weather.DATE.str.split('-', expand=True)
-    weather.DATE = pd.to_datetime(weather.DATE)
-    return weather
-    
-
-def convert_street_311(df):
-    df[["street_address", 'city', 'zip_code', "something1", "something2"]] = df.OBJECTDESC.str.split(',', expand=True)
-    return df
-
-def regex_street(df):
-    df['street_name'] = df.street_address.str.replace(r'([\d]+)', '')
-    df['street_name'] = df['street_name'].str.lower()
-    df['street_name'] = df.street_name.replace(['street', 'st', 'dr', 'drive', 'avenue', 'ave', 'av', 'trail', 'tr','road', 'rd', 'lane', 'ln', 'boulevard', 'blvd', 'bv', 'parkway', 'pkwy'], '', regex=True)
-    return df
-
-def do_it():
-    df = convert_street_311(three_11)
-    df = regex_street(df)
-    return df
-
-
-def format_sso():
-    sso = acquire.acquire_sso()
-    sso['SPILL_ST_NAME'] = sso['SPILL_ST_NAME'].str.lower()
-    sso['SPILL_ST_NAME'] = sso['SPILL_ST_NAME'].replace(['street', 'st', 'dr', 'drive', 'avenue', 'ave', 'av', 'trail', 'tr','road', 'rd', 'lane', 'ln', 'boulevard', 'blvd', 'bv', 'parkway', 'pkwy'], '', regex=True)
-    return sso
-
-
-def wrangle_sso_311():
-    sso = acquire.acquire_sso()
-    weather = acquire.acquire_weather()
-    # do_it function formats 311 data for join to sso data
-    df = do_it()
-    # formating addresses in sso data
-    sso = format_sso()
-    # setting index for merge
-    sso = sso.set_index("SPILL_ST_NAME")
-    df = df.set_index("street_name")
-    df2 = pd.merge(sso,df, left_index=True, right_index=True)
-    df2 = df2.reset_index().rename(columns={'index':'street_name'})
-    return df2
-    
-    
-def wrangle():
-    weather = acquire.acquire_weather()
-    df = wrangle_sso_311()
-    weather = prep_weather()
-    # setting up sso date column as index to merge with weather data
-    df['REPORTDATE'] = pd.to_datetime(df['REPORTDATE'])
-    df['REPORTDATE'] = df['REPORTDATE'].dt.date
-    weather = weather.set_index("DATE")
-    df = df.set_index("REPORTDATE")
-    df = pd.merge(weather,df, left_index=True, right_index=True)
-    # resetting index after merge
-    df = df.reset_index().rename(columns={'index':'REPORTDATE'})
-    return df
-
-# old prepare stuff^
-
-#************************************
-
-# New prepare stuff
-
-import pandas as pd
+import numpy as np
 import acquire
 import os.path
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
+from datetime import timedelta
 
 def read_sso_dict():
     '''
@@ -126,7 +45,38 @@ def filter_sso_features(features = get_sso_dict_features()):
     df = df.drop(columns = ['TIMEINT','STEPS_TO_PREVENT'])
     return df
 
-def prepare_sso_df(df = filter_sso_features()):
+# def prepare_sso_df(df = filter_sso_features()):
+#     '''
+#     This function fixes datatypes, creates an extra feature, 
+#     fills some of the null values, and renames columns
+#     '''
+#     string_features = ['SSO_ID','SPILL_ADDRESS','COUNCIL_DISTRICT',]
+#     for col in string_features:
+#         df[col] = df[col].astype(str)
+#     time_features = ['REPORTDATE','SPILL_START','SPILL_STOP',
+#                     'ResponseDTTM', 'LASTCLND']
+#     for col in time_features:
+#         df[col] = pd.to_datetime(df[col])   
+#     fill_features = ['NUM_SPILLS_24MOS','PREVSPILL_24MOS','HRS_2',
+#                     'HRS_3','GAL_2','GAL_3']
+#     for col in fill_features:
+#         df[col] = df[col].fillna(0)  
+#     df.Root_Cause = df.Root_Cause.str.strip()
+#     df.ResponseTime = df.ResponseTime * 60
+#     df['days_since_cleaned'] = (df.SPILL_START - df.LASTCLND).dt.days
+#     df.columns = ['sso_id','report_date','spill_address_num','spill_st_name',
+#         'total_gal','gals_ret','spill_start','spill_stop','hrs','cause',
+#         'comments','actions','watershed','unit_id','unit_id2','discharge_to',
+#         'discharge_route','council_district','month','year','week',
+#         'earz_zone','pipe_diam','pipe_len','pipe_type','inst_year','inches_no',
+#         'rainfall_last3','spill_address_full','num_spills_recorded',
+#         'num_spills_24mos','prevspill_24mos','unit_type','asset_type',
+#         'last_cleaned','response_time','response_dttm','public_notice',
+#         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
+#     df.root_cause = df.root_cause.str.lower()
+#     return df
+
+def prepare_sso_df2(df = filter_sso_features()):
     '''
     This function fixes datatypes, creates an extra feature, 
     fills some of the null values, and renames columns
@@ -155,14 +105,16 @@ def prepare_sso_df(df = filter_sso_features()):
         'last_cleaned','response_time','response_dttm','public_notice',
         'root_cause','hrs_2','gal_2','hrs_3','gal_3','days_since_cleaned']
     df.root_cause = df.root_cause.str.lower()
+    df['country_address'] = df.spill_address_full+', San Antonio, TX, USA'
     return df
 
-def prepare_sso_with_zipcodes(df = prepare_sso_df()):
+def prepare_sso_with_zipcodes(df = prepare_sso_df2()):
     '''
     This function creates a zipcode column in the dataframe using 
     geopy against the street address given in the raw data.
     It checks if a csv exists, and uses that instead of running the
     code because it takes a very long time to gather all the data.
+    It imputes some columns and adds a few new features.
     '''
     time_features = ['report_date','spill_start','spill_stop',
                     'response_dttm', 'days_since_cleaned']
@@ -182,9 +134,28 @@ def prepare_sso_with_zipcodes(df = prepare_sso_df()):
     x = pd.cut(df.total_gal, bins=[0,15,50,250,1000, 5000,50000,2000000,
                                df.total_gal.max()])
     df['total_gal_binned'] = x
-    df.days_since_cleaned = df.days_since_cleaned.astype(float)
-    # df.zip_code = df.zip_code.str.strip()
-    # df = df[(df.zip_code != 'None') & (df.zip_code != 'Texas')]
+    df.days_since_cleaned = df.days_since_cleaned.astype(float)\
+                            .fillna(df.days_since_cleaned.median())
+    df.zip_code = df.zip_code.str.strip()
+    
+    df.inst_year = df.inst_year.replace(9999,pd.NA)
+    df['age'] = df.spill_start.dt.year - df.inst_year
+    df.inst_year = df.inst_year.astype(str).replace('nan', 'unknown')
+    df.age = df.age.replace([-3,-2,-1], pd.NA)
+    z = pd.cut(df.age, bins=list(range(0,130,5)))
+    df['age_binned'] = z
+    df['hours_spilled'] = df.spill_stop - df.spill_start
+    df.hours_spilled = df.hours_spilled / timedelta (hours=1)
+    df.discharge_route = df.discharge_route.fillna('none')
+    df.earz_zone = df.earz_zone.replace(np.NaN, 0.0)\
+                                        .apply(round).astype(str)
+    df.unit_type = df.unit_type.fillna('unknown')
+    df.asset_type = df.asset_type.fillna('unknown')
+    df.root_cause = df.root_cause.fillna('other')
+    df.age = df.age.fillna(df.age.median())
+    df.pipe_type = df.pipe_type.fillna('unknown')
+    df.pipe_diam = df.pipe_diam.fillna(df.pipe_diam.median())
+    df.pipe_len = df.pipe_len.fillna(df.pipe_len.median())
     return df
 
 
@@ -377,6 +348,9 @@ def prep_weather_data():
     return weather
 
 def get_data():
+    '''
+    This is the only function needed to run to get a dataframe with weather and sso data
+    '''
     weather = prep_weather_data()
     sso = prepare_sso_with_zipcodes()
     data = sso.merge(weather, left_on='report_date', right_index=True)
