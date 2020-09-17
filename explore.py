@@ -14,42 +14,42 @@ alpha = 1 - .99
 
 # Explore Visuals
 def get_age_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.swarmplot(x="root_cause", y="age", data=df)
     plt.ylabel("Age of Sewer")
     plt.xlabel("Root Cause of SSO Event")
     plt.show()
     
 def get_rainfall_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.swarmplot(x="root_cause", y="precipitation", data=df)
     plt.ylabel("Precipitation")
     plt.xlabel("Root Cause of SSO Event")
     plt.show()
     
 def get_rain_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.catplot(x='precipitation', y='root_cause', hue="rain", data=df)
     plt.ylabel("Root Cause of SSO Event")
     plt.xlabel("Precipitation")
     plt.show()
     
 def get_max_temp_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.swarmplot(x="root_cause", y="max_temp", data=df)
     plt.xlabel("Root Cause of SSO Event")
     plt.ylabel("Max Temperature F°")
     plt.show()
     
 def get_min_temp_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.swarmplot(x="root_cause", y="min_temp", data=df)
     plt.xlabel("Root Cause of SSO Event")
     plt.ylabel("Minimum Temperature in F°")
     plt.show()
     
 def get_avg_temp_visual(df):
-    plt.figure(figsize=(16,8))
+    plt.figure(figsize=(20,8))
     sns.swarmplot(x="root_cause", y="avg_temp", data=df)
     plt.xlabel("Root Cause of SSO Event")
     plt.ylabel("Average Temperature in F°")
